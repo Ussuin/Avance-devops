@@ -1,12 +1,12 @@
-const mariadb = require("mariadb");
-require("dotenv").config();
+(async () => {
+  const mariadb = await import("mariadb");
+  const pool = mariadb.createPool({
+    host: "db",
+    user: "root",
+    password: "rootpassword",
+    database: "cryptotracker"
+  });
 
-const pool = mariadb.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  connectionLimit: 5
-});
+  module.exports = pool;
+})();
 
-module.exports = pool;
