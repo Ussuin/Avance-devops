@@ -15,7 +15,7 @@ function App() {
   }, []);
 
   const fetchHistory = () => {
-    axios.get("http://localhost:3001/history")
+    axios.get("http://44.223.50.32:3001/history")
       .then(res => {
         const formatted = res.data.map(row => ({
           ...row,
@@ -28,7 +28,7 @@ function App() {
 
   const handleSearch = () => {
     if (!symbol) return;
-    axios.get(`http://localhost:3001/prices/${symbol}`)
+    axios.get(`http://44.223.50.32:3001/prices/${symbol}`)
       .then(() => fetchHistory())
       .catch(err => console.error(err));
   };
