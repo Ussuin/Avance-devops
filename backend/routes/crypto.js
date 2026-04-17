@@ -2,8 +2,8 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../db");
 const axios = require("axios");
+require("dotenv").config();
 
-// Mapeo de símbolos a IDs de CoinGecko
 const symbolMap = {
   BTC: "bitcoin",
   ETH: "ethereum",
@@ -14,16 +14,16 @@ const symbolMap = {
 // Obtener historial
 router.get("/history", async (req, res) => {
   try {
-    const conn = await pool.getConnection();
-    const rows = await conn.query("SELECT * FROM history ORDER BY date DESC");
-    conn.release();
+    const rows = await pool.query("SELECT * FROM history ORDER BY created_at DESC");
     res.json(rows);
   } catch (err) {
-    console.error("Error en /history:", err); // log completo
-    res.status(500).json({ error: "Error al obtener historial", details: err.message });
+    console.error("Error en /history:", err);
+    res.status(500).json({
+      error: "Error al obtener historial",
+      details: err.code || err.message || "Problema interno en el servidor"
+    });
   }
 });
-
 
 // Consultar precio y guardar en DB
 router.get("/prices/:symbol", async (req, res) => {
@@ -37,25 +37,39 @@ router.get("/prices/:symbol", async (req, res) => {
 
   try {
     const response = await axios.get(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${apiSymbol}&vs_currencies=usd`
+      `https://api.coingecko.com/api/v3/simple/price?ids=${apiSymbol}&vs_currencies=usd`,
+      { timeout: 5000 } // evita que se quede colgado si la red bloquea
     );
-    const price = response.data[apiSymbol]?.usd;
 
+    const price = response.data[apiSymbol]?.usd;
     if (!price) {
-      return res.status(404).json({ error: "Cripto no encontrada en CoinGecko" });
+      return res.status(502).json({ error: "CoinGecko no devolvió datos válidos" });
     }
 
-    const conn = await pool.getConnection();
-    await conn.query(
-      "INSERT INTO history(symbol, price, date) VALUES (?, ?, NOW())",
+    await pool.query(
+      "INSERT INTO history(symbol, price, created_at) VALUES (?, ?, NOW())",
       [symbol, price]
     );
-    conn.release();
 
     res.json({ symbol, price });
   } catch (err) {
-    console.error("Error en /prices:", err.message);
-    res.status(500).json({ error: "Error al consultar precio" });
+    console.error("Error en /prices:", err);
+
+    // Diferenciar entre fallo de red y fallo interno
+    if (err.code === "ECONNABORTED") {
+      return res.status(504).json({ error: "Timeout al consultar CoinGecko" });
+    }
+    if (err.response) {
+      return res.status(err.response.status).json({
+        error: "CoinGecko devolvió error",
+        details: err.response.data
+      });
+    }
+
+    res.status(500).json({
+      error: "Error al consultar precio",
+      details: err.message || "Problema interno en el servidor"
+    });
   }
 });
 

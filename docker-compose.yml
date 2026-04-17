@@ -11,10 +11,10 @@ services:
     ports:
       - "3001:3001"
     environment:
-      - DB_HOST=db
+      - DB_HOST=localhost
       - DB_USER=root
-      - DB_PASSWORD=rootpassword
-      - DB_NAME=cryptotracker
+      - DB_PASSWORD=123
+      - DB_NAME=cryptodb
     depends_on:
       - db
 
@@ -22,8 +22,8 @@ services:
     image: mariadb:10.6
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: cryptotracker
+      MYSQL_ROOT_PASSWORD: 123
+      MYSQL_DATABASE: cryptodb
     ports:
       - "3306:3306"
     volumes:
