@@ -32,6 +32,12 @@ function App() {
       .then(() => fetchHistory())
       .catch(err => console.error(err));
   };
+  const API_URL = process.env.REACT_APP_API_URL;
+
+  axios.get(`${API_URL}/prices/BTC`)
+    .then(res => console.log(res.data))
+    .catch(err => console.error(err));
+
 
   return (
     <Container maxWidth="lg" sx={{ bgcolor: "#121212", color: "white", minHeight: "100vh", py: 4 }}>
