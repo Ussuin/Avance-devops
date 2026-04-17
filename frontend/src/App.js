@@ -28,7 +28,7 @@ function App() {
 
   const handleSearch = () => {
     if (!symbol) return;
-    axios.get(`54.224.102.7:3001/prices/${symbol}`)
+    axios.get("http://54.224.102.7:3001/prices/${symbol}")
       .then(() => fetchHistory())
       .catch(err => console.error(err));
   };
